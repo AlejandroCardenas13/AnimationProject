@@ -20,10 +20,27 @@ class _AnimationTransformState extends State<AnimationTrPageTwo> {
     });
   }
 
+  final _pageController = PageController();
+  double _currentPage = 0;
+
+  void _listener() {
+    setState(() {
+      _currentPage = _pageController.page;
+    });
+  }
+
   @override
   void initState() {
     _loadData();
+    _pageController.addListener(_listener);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _pageController.removeListener(() {});
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -36,14 +53,26 @@ class _AnimationTransformState extends State<AnimationTrPageTwo> {
             child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 50),
           child: PageView.builder(
+            controller: _pageController,
             itemBuilder: (context, index) {
-              print(index);
-              return Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Image.network(
-                    _images[index],
-                    fit: BoxFit.fitWidth,
-                  ));
+              final percent = (_currentPage - index);
+              final value = percent.clamp(0.0, 1.0);
+              print(value);
+              return Opacity(
+                opacity: 1 - value,
+                child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.003)
+                        ..rotateX(pi * value),
+                      child: Image.network(
+                        _images[index],
+                        fit: BoxFit.fitWidth,
+                      ),
+                    )),
+              );
             },
             itemCount: _images.length,
           ),
